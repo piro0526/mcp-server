@@ -1,4 +1,4 @@
-import { Request, Result, Notification } from './types.js';
+import { Request, Result } from './types.js';
 import { TOOLS, ToolExecutor } from './tools.js';
 
 export class MessageHandler {
@@ -44,7 +44,7 @@ export class MessageHandler {
     }
   }
 
-  static createErrorResponse(id: number | string, code: number, message: string, data?: any): MCPResponse {
+  static createErrorResponse(id: number | string, code: number, message: string, data?: any): Result {
     return {
       jsonrpc: '2.0',
       id,

@@ -2,14 +2,15 @@
   "name": "mcp-server",
   "version": "1.0.0",
   "description": "Hello World MCP Server",
-  "main": "dist/helloworld.js",
+  "main": "dist/src/helloworld.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/helloworld.js",
-    "dev": "ts-node --esm helloworld.ts"
+    "start": "node dist/src/helloworld.js",
+    "dev": "ts-node --esm src/helloworld.ts"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0",
     "ts-node": "^10.9.0"

@@ -4,7 +4,7 @@ import { Transport } from './transport.js';
 export class StdioTransport implements Transport {
   private rl?: readline.Interface;
   public sessionId?: string;
-  
+
   public onmessage?: (message: any) => void;
   public onerror?: (error: Error) => void;
   public onclose?: () => void;

@@ -5,8 +5,9 @@ export class HttpTransport implements Transport {
   private app: express.Application;
   private server?: any;
   private port: number;
+  private pendingResponses: Map<string | number, express.Response> = new Map();
   public sessionId?: string;
-  
+
   public onmessage?: (message: any) => void;
   public onerror?: (error: Error) => void;
   public onclose?: () => void;
@@ -21,30 +22,27 @@ export class HttpTransport implements Transport {
 
   private setupMiddleware() {
     this.app.use(express.json());
-    this.app.use(express.static('public'));
-    
-    // CORS対応
-    this.app.use((req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      if (req.method === 'OPTIONS') {
-        res.sendStatus(200);
-      } else {
-        next();
-      }
-    });
   }
 
   private setupRoutes() {
     // MCP JSON-RPCエンドポイント
     this.app.post('/mcp', (req, res) => {
       try {
-        if (this.onmessage) {
-          this.onmessage(req.body);
+        const request = req.body;
+        
+        // リクエストIDとレスポンスオブジェクトを紐付けて保存
+        if (request.id !== undefined) {
+          this.pendingResponses.set(request.id, res);
         }
-        // レスポンスは別途sendメソッドで処理
-        res.status(200);
+        
+        if (this.onmessage) {
+          this.onmessage(request);
+        }
+        
+        // 通知の場合（IDがない）は即座にレスポンスを返す
+        if (request.id === undefined) {
+          res.status(200).end();
+        }
       } catch (error) {
         if (this.onerror) {
           this.onerror(error as Error);
@@ -55,11 +53,28 @@ export class HttpTransport implements Transport {
 
     // ヘルスチェック
     this.app.get('/health', (req, res) => {
-      res.json({ 
-        status: 'healthy', 
+      res.status(200).json({
+        status: 'healthy',
         sessionId: this.sessionId,
-        timestamp: new Date().toISOString() 
+        timestamp: new Date().toISOString()
       });
+    });
+
+    // ツール一覧（デバッグ用）
+    this.app.get('/tools', (req, res) => {
+      const toolsListRequest = {
+        jsonrpc: '2.0' as const,
+        id: 'debug-tools-list',
+        method: 'tools/list'
+      };
+      
+      if (this.onmessage) {
+        this.onmessage(toolsListRequest);
+        // デバッグ用なので簡単なレスポンスを返す
+        res.json({ message: 'Check console for tools list' });
+      } else {
+        res.status(503).json({ error: 'Server not ready' });
+      }
     });
   }
 
@@ -80,9 +95,20 @@ export class HttpTransport implements Transport {
   }
 
   async send(message: any): Promise<void> {
-    // HTTPの場合、レスポンスは非同期で処理される
-    // 実際の実装では、リクエスト-レスポンスのマッピングが必要
-    console.log('HTTP Response:', JSON.stringify(message));
+    const messageId = message.id;
+    
+    if (messageId !== undefined && this.pendingResponses.has(messageId)) {
+      // 対応するHTTPレスポンスオブジェクトを取得
+      const res = this.pendingResponses.get(messageId);
+      this.pendingResponses.delete(messageId);
+      
+      if (res) {
+        res.json(message);
+      }
+    } else {
+      // レスポンス待ちがない場合はコンソールに出力（デバッグ用）
+      console.log('HTTP Response (no pending request):', JSON.stringify(message, null, 2));
+    }
   }
 
   async close(): Promise<void> {
