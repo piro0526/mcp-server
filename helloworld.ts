@@ -6,7 +6,7 @@ app.use(express.json());
 
 app.post('/mcp', async (req, res) => {
   const request: Request = req.body;
-  const response: Result = ;
+  const response: Result = request_handler(request);
   res.json(response);
 });
 
