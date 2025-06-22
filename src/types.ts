@@ -79,7 +79,7 @@ export type ServerCapabilities = {
 }
 
 export type InitializeRequest = Request & {
-  method: 'initialize';
+  method: string;
   params: {
     clientInfo: Implementation;
     capabilities: ClientCapabilities;
@@ -92,6 +92,22 @@ export type InitializeResult = Result & {
   capabilities: ServerCapabilities;
   serverInfo: Implementation;
   instructions?: string;
+}
+
+export function isInitializeResult(obj: any): obj is InitializeResult {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    typeof obj.protocolVersion === 'string' &&
+    typeof obj.capabilities === 'object' &&
+    obj.capabilities !== null &&
+    typeof obj.serverInfo === 'object' &&
+    obj.serverInfo !== null &&
+    typeof obj.serverInfo.name === 'string' &&
+    typeof obj.serverInfo.version === 'string' &&
+    typeof obj.serverInfo.title === 'string' &&
+    (obj.instructions === undefined || typeof obj.instructions === 'string')
+  );
 }
 
 export type Tool = {

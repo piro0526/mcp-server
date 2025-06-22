@@ -1,15 +1,8 @@
-import { isJSONRPCResponse, isJSONRPCRequest, isJSONRPCNotification, isJSONRPCError, ErrorCode, McpError, Result, Request } from './types.js';
+import { isJSONRPCResponse, isJSONRPCRequest, isJSONRPCNotification, isJSONRPCError, ErrorCode, McpError, Result, Request, Notification } from './types.js';
 import { JSONRPCRequest, JSONRPCResponse, JSONRPCNotification, JSONRPCError} from "./types.js";
 import { Transport } from './transport.js';
 
-/**
- * プロトコル層のインターフェース（シンプル化）
- * 接続、リクエスト処理、リクエスト送信の3つの機能のみを提供
- */
 export abstract class Protocol {
-  /**
-   * プロトコルへの接続を確立
-   */
 
     private _transport?: Transport;
     //private _requestMessageId = 0;
@@ -48,7 +41,7 @@ export abstract class Protocol {
 
     setNotificationHandler(
         method: string,
-        handler: (notification: JSONRPCNotification) => void | Promise<void>
+        handler: (notification: Notification) => void | Promise<void>
     ): void {
         this._notificationHandlers.set(method, (request) => {
             return Promise.resolve(handler(request));
@@ -94,7 +87,7 @@ export abstract class Protocol {
 
         // Ignore notifications not being subscribed to.
         if (handler === undefined) {
-        return;
+            return;
         }
 
         // Starting with Promise.resolve() puts any synchronous errors into the monad as well.

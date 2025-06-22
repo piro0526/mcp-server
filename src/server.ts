@@ -1,6 +1,5 @@
 import { Protocol } from './protocol.js';
-import { ClientCapabilities, Implementation, ServerCapabilities, Request, Response, LATEST_PROTOCOL_VERSION, SUPPORTED_PROTOCOL_VERSIONS } from './types.js';
-impor
+import { ClientCapabilities, Implementation, ServerCapabilities, InitializeResult, InitializeRequest, LATEST_PROTOCOL_VERSION, SUPPORTED_PROTOCOL_VERSIONS } from './types.js';
 
 export type ServerOptions = {
   /**
@@ -31,7 +30,7 @@ export class Server extends Protocol {
         this._instructions = options?.instructions;
 
         this.setRequestHandler("initialize", (request) =>
-            this._oninitialize(request),
+            this._oninitialize(request as InitializeRequest),
         );
         this.setNotificationHandler("notifications/initialized", () =>
             this.oninitialized?.(),
@@ -49,9 +48,8 @@ export class Server extends Protocol {
     }
 
     private async _oninitialize(
-        request: Request,
-    ): Promise<Response> {
-        assert(request.params);
+        request: InitializeRequest,
+    ): Promise<InitializeResult> {
         const requestedVersion = request.params.protocolVersion;
 
         this._clientCapabilities = request.params.capabilities;
