@@ -2,11 +2,11 @@
   "name": "mcp-server",
   "version": "1.0.0",
   "description": "Hello World MCP Server",
-  "main": "dist/src/helloworld.js",
+  "main": "dist/helloworld.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/src/helloworld.js",
+    "start": "node dist/helloworld.js",
     "dev": "ts-node --esm src/helloworld.ts"
   },
   "devDependencies": {

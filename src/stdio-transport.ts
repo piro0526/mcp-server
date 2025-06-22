@@ -1,8 +1,10 @@
 import * as readline from 'readline';
-import { Transport } from './transport.js';
+import { Transport, TransportType } from './transport.js';
 
 export class StdioTransport implements Transport {
   private rl?: readline.Interface;
+  private running: boolean = false;
+  private protocolVersion: string = '2024-11-05'; // デフォルトプロトコルバージョン
   public sessionId?: string;
 
   public onmessage?: (message: any) => void;
@@ -34,6 +36,7 @@ export class StdioTransport implements Transport {
     });
 
     this.rl.on('close', () => {
+      this.running = false;
       if (this.onclose) {
         this.onclose();
       }
@@ -44,6 +47,8 @@ export class StdioTransport implements Transport {
         this.onerror(error);
       }
     });
+
+    this.running = true;
   }
 
   async send(message: any): Promise<void> {
@@ -55,6 +60,16 @@ export class StdioTransport implements Transport {
     if (this.rl) {
       this.rl.close();
       this.rl = undefined;
+      this.running = false;
     }
+  }
+
+  setProtocolVersion(version: string): void {
+    this.protocolVersion = version;
+    console.log(`STDIO Transport: Protocol version set to ${version}`);
+  }
+
+  getProtocolVersion(): string {
+    return this.protocolVersion;
   }
 }
