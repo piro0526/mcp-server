@@ -1,5 +1,16 @@
 import { Protocol } from './protocol.js';
-import { ClientCapabilities, Implementation, ServerCapabilities, InitializeResult, InitializeRequest, LATEST_PROTOCOL_VERSION, SUPPORTED_PROTOCOL_VERSIONS } from './types.js';
+import {
+    ClientCapabilities,
+    Implementation,
+    ServerCapabilities,
+    InitializeResult,
+    InitializeRequest,
+    Request,
+    Result,
+    LATEST_PROTOCOL_VERSION,
+    SUPPORTED_PROTOCOL_VERSIONS,
+    Tool
+} from './types.js';
 
 export type ServerOptions = {
   /**
@@ -18,6 +29,8 @@ export class Server extends Protocol {
     private _clientVersion?: Implementation;
     private _capabilities: ServerCapabilities;
     private _instructions?: string;
+    
+    private _registeredTools: { [name: string]: Tool } = {};
 
     oninitialized?: () => void;
 
@@ -44,7 +57,7 @@ export class Server extends Protocol {
             );
         }
 
-        this._capabilities = mergeCapabilities(this._capabilities, capabilities);
+        this._capabilities = capabilities;
     }
 
     private async _oninitialize(
@@ -61,9 +74,55 @@ export class Server extends Protocol {
 
         return {
             protocolVersion,
-            capabilities: this.getCapabilities(),
+            capabilities: this._capabilities,
             serverInfo: this._serverInfo,
             ...(this._instructions && { instructions: this._instructions }),
         };
+    }
+
+    private _toolHandlersInitialized = false;
+
+    private setToolRequestHandlers() {
+        if (this._toolHandlersInitialized) {
+        return;
+        }
+
+        this.setRequestHandler(
+            "tools/list",
+            (): Result => {
+                const Result: Result = {
+                    tools: Object.values(this._registeredTools),
+                };
+                return Result;
+            }
+        );
+
+        this.setRequestHandler(
+            "tools/call",
+            async (request: Request): Promise<Result> => {
+                const toolName = request.params?.name;
+                const tool = this._registeredTools[toolName];
+
+                if (!tool) {
+                    throw new Error(`Tool '${toolName}' not found`);
+                }
+
+                // Validate input against tool's schema
+                const input = request.params?.arguments || {};
+                if (tool.inputSchema.type !== 'object') {
+                    throw new Error(`Tool '${toolName}' requires an object input`);
+                }
+                if (tool.inputSchema.required) {
+                    for (const prop of tool.inputSchema.required) {
+                        if (!(prop in input)) {
+                            throw new Error(`Missing required property '${prop}' in input for tool '${toolName}'`);
+                        }
+                    }
+                }
+
+                // Call the tool's implementation (this part is abstract and should be implemented by subclasses)
+                return await this.callTool(tool, input);
+            }
+        )
     }
 }

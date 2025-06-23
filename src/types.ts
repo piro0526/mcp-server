@@ -12,47 +12,41 @@ export type RequestId = string | number;
 
 export type Request = {
   method: string;
-  params?: {
-    [key: string]: unknown;
-  };
+  params?: Record<string, any>;
 };
 
 export type Notification = {
   method: string;
-  params?: {
-    [key: string]: unknown;
-  };
+  params?: Record<string, any>;
 }
 
 export type JSONRPCRequest = Request & {
-  jsonrpc: "2.0";
+  jsonrpc: string;
   id: RequestId;
 }
 
 export type JSONRPCResponse = {
-  jsonrpc: "2.0";
+  jsonrpc: string;
   id: RequestId;
   result?: Result;
 }
 
 export type JSONRPCNotification = Notification & {
-  jsonrpc: "2.0";
+  jsonrpc: string;
 }
 
-export type Result = {
-  [key: string]: unknown;
-}
+export type Result = Record<string, any>;
 
 export type ClientCapabilities = {
   sampling?: {
-    [key: string]: unknown;
+    [key: string]: any;
   };
   elicitation?: {
-    [key: string]: unknown;
+    [key: string]: any;
   };
   roots?: {
     listChanged?: boolean;
-    [key: string]: unknown;
+    [key: string]: any;
   };
 }
 
@@ -65,16 +59,16 @@ export type Implementation = {
 export type ServerCapabilities = {
   prompts?: {
     listChanged?: boolean;
-    [key: string]: unknown;
+    [key: string]: any;
   };
   resources?: {
     subscribe?: boolean;
     listChanged?: boolean;
-    [key: string]: unknown;
+    [key: string]: any;
   };
   tools?: {
     listChanged?: boolean;
-    [key: string]: unknown;
+    [key: string]: any;
   };
 }
 
@@ -112,6 +106,7 @@ export function isInitializeResult(obj: any): obj is InitializeResult {
 
 export type Tool = {
   name: string;
+  title: string;
   description?: string;
   inputSchema: {
     type: 'object';

@@ -5,7 +5,7 @@ import { Transport } from './transport.js';
 export abstract class Protocol {
 
     private _transport?: Transport;
-    //private _requestMessageId = 0;
+    
     private _requestHandlers: Map<
         string,
         (
@@ -32,7 +32,7 @@ export abstract class Protocol {
 
     setRequestHandler(
         method: string,
-        handler: (request: Request) => Promise<Result>
+        handler: (request: Request) => Result | Promise<Result>
     ): void {
         this._requestHandlers.set(method, (request) => {
             return Promise.resolve(handler(request));
